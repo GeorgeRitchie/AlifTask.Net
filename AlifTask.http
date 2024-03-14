@@ -1,0 +1,6 @@
+@AlifTask_HostAddress = http://localhost:5126
+
+GET {{AlifTask_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
