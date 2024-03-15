@@ -1,3 +1,5 @@
+using AlifTask.Common.Extensions.CustomAuthenticator;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +8,12 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddAuthentication(opt =>
+{
+	opt.DefaultScheme = ConstValues.CustomXDigestAuthenticationSchemeName;
+})
+	.AddXDigest(ConstValues.CustomXDigestAuthenticationSchemeName);
 
 var app = builder.Build();
 
@@ -18,6 +26,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
