@@ -25,6 +25,8 @@ namespace AlifTask.Persistence
 			base.OnModelCreating(modelBuilder);
 
 			modelBuilder.ApplyConfiguration(new OperationConfigurations());
+
+			modelBuilder.Entity<User>().HasIndex(i => i.Username).IsUnique();
 		}
 	}
 }

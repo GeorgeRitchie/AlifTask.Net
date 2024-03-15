@@ -24,6 +24,8 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(connectionSt
 
 var app = builder.Build();
 
+InitializeAppAsync(app).Wait();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -39,3 +41,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+static async Task InitializeAppAsync(WebApplication app)
+{
+	var db = app.Services.CreateScope().ServiceProvider.GetRequiredService<AppDbContext>();
+
+	await DbInitializer.InitializeAsync(db);
+}
