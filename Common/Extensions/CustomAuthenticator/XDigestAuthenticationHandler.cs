@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using AlifTask.Persistence;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -11,12 +13,23 @@ namespace AlifTask.Common.Extensions.CustomAuthenticator
 	{
 		private const string HmacSha1SecretKey = "O2RlrAeKKsW9S3TSo55mIfacNzo=";
 
+		private class UserInfoDto
+		{
+			public Guid Id { get; set; }
+			public string UserName { get; set; }
+			public bool IsWalletVerified { get; set; }
+		}
+
+		private readonly AppDbContext db;
+
 		public XDigestAuthenticationHandler(
 			IOptionsMonitor<XDigestAuthenticationOptions> options,
 			ILoggerFactory logger,
-			UrlEncoder encoder)
+			UrlEncoder encoder,
+			AppDbContext db)
 			: base(options, logger, encoder)
 		{
+			this.db = db;
 		}
 
 		protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -26,17 +39,30 @@ namespace AlifTask.Common.Extensions.CustomAuthenticator
 				return AuthenticateResult.Fail("X-Digest header not found.");
 			}
 
-			var isValid = await ValidateDigest(digestValue);
+			var isValid = await ValidateDigestAsync(digestValue);
 
 			if (!isValid)
 			{
 				return AuthenticateResult.Fail("Invalid X-Digest value.");
 			}
-			// TODO add user id validation and claims adding
+
+			if (!Request.Headers.TryGetValue(ConstValues.XUserIdHeaderName, out var userId))
+			{
+				return AuthenticateResult.Fail("X-UserId header not found.");
+			}
+
+			var user = await FindUserAsync(userId);
+
+			if (user == null)
+			{
+				return AuthenticateResult.Fail("Invalid X-UserId value.");
+			}
 
 			var claims = new[]
 			{
-				new Claim(ClaimTypes.NameIdentifier, "User")
+				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+				new Claim(ClaimTypes.Name, user.UserName),
+				new Claim(ConstValues.WalletVerifiedStatusClaimName, user.IsWalletVerified.ToString()),
 			};
 
 			var identity = new ClaimsIdentity(claims, Scheme.Name);
@@ -46,7 +72,7 @@ namespace AlifTask.Common.Extensions.CustomAuthenticator
 			return AuthenticateResult.Success(ticket);
 		}
 
-		private async Task<bool> ValidateDigest(string? digest)
+		private async Task<bool> ValidateDigestAsync(string? digest)
 		{
 			if (!string.IsNullOrEmpty(digest))
 			{
@@ -63,6 +89,21 @@ namespace AlifTask.Common.Extensions.CustomAuthenticator
 			}
 
 			return false;
+		}
+
+		private async Task<UserInfoDto?> FindUserAsync(string? userIdAsTxt)
+		{
+			if (!Guid.TryParse(userIdAsTxt, out Guid userId))
+				return null;
+
+			return await db.Users.AsNoTracking()
+									.Select(i => new UserInfoDto
+									{
+										Id = i.Id,
+										UserName = i.Username,
+										IsWalletVerified = i.Wallet.IsVerified
+									})
+									.FirstOrDefaultAsync(i => i.Id == userId);
 		}
 
 		private string CalculateHMACSHA1(string text, string key)
