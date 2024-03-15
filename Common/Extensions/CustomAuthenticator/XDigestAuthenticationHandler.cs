@@ -32,6 +32,7 @@ namespace AlifTask.Common.Extensions.CustomAuthenticator
 			{
 				return AuthenticateResult.Fail("Invalid X-Digest value.");
 			}
+			// TODO add user id validation and claims adding
 
 			var claims = new[]
 			{
