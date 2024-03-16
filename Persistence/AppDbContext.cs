@@ -11,6 +11,7 @@ namespace AlifTask.Persistence
 	{
 		public DbSet<User> Users { get; set; }
 		public DbSet<Wallet> Wallets { get; set; }
+		public DbSet<Operation> Operations { get; set; }
 
 		public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 		{

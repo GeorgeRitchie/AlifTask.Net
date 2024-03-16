@@ -4,5 +4,6 @@
 	{
 		Income,
 		Outcome,
+		WalletToWalletTransfer,
 	}
 }

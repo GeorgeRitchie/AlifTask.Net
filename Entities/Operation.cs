@@ -9,9 +9,9 @@
 
 		public OperationType Type { get; set; }
 
-		public Guid FromId { get; set; }
-		public Wallet From { get; set; }
-		public Guid ToId { get; set; }
-		public Wallet To { get; set; }
+		public Guid? FromId { get; set; }
+		public Wallet? From { get; set; }
+		public Guid? ToId { get; set; }
+		public Wallet? To { get; set; }
 	}
 }
