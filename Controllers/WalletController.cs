@@ -68,5 +68,11 @@ namespace AlifTask.Controllers
 			else
 				return BadRequest(result.Errors);
 		}
+
+		[HttpGet]
+		public async Task<TransactionsInfoDto> GetOperationsInfoForCurrentMonth([FromQuery] WalletIdDto walletId)
+		{
+			return await walletOperationService.GetWalletOperationsOfCurrentMonth(walletId.Id);
+		}
 	}
 }

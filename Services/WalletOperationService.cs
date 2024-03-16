@@ -156,5 +156,29 @@ namespace AlifTask.Services
 				return Result.Failure(Guid.Empty, [new("", ex.Message)]);
 			}
 		}
+
+		public async Task<TransactionsInfoDto> GetWalletOperationsOfCurrentMonth(Guid walletId)
+		{
+			var incomes = await db.Operations.Where(i => (i.Type == OperationType.Income || i.Type == OperationType.WalletToWalletTransfer)
+														&& i.DateTime.Year == DateTime.UtcNow.Year
+														&& i.DateTime.Month == DateTime.UtcNow.Month
+														&& i.ToId == walletId).ToListAsync();
+
+			var outcomes = await db.Operations.Where(i => (i.Type == OperationType.Outcome || i.Type == OperationType.WalletToWalletTransfer)
+														&& i.DateTime.Year == DateTime.UtcNow.Year
+														&& i.DateTime.Month == DateTime.UtcNow.Month
+														&& i.FromId == walletId).ToListAsync();
+
+			var result = new TransactionsInfoDto()
+			{
+				WalletId = walletId,
+				TotalIncomesCount = incomes.Count,
+				TotalIncomesSum = incomes.Sum(i => i.Amount),
+				TotalOutcomesCount = outcomes.Count,
+				TotalOutcomesSum = outcomes.Sum(i => i.Amount),
+			};
+
+			return result;
+		}
 	}
 }
