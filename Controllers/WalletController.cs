@@ -2,11 +2,13 @@
 using AlifTask.Models;
 using AlifTask.Persistence;
 using AlifTask.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AlifTask.Controllers
 {
+	[Authorize]
 	[ApiController]
 	[Route("api/[controller]/[action]")]
 	public class WalletController : ControllerBase
